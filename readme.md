@@ -1,5 +1,5 @@
-# keyword_scraper
+# keyword_crawler
 
 
 
-Scraper tool for crawling domain for specific keywords extracting relevant texts and links (internal and external).
+crawler tool for crawling domain for specific keywords extracting relevant texts and links (internal and external).
