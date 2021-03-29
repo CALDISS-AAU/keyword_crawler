@@ -64,6 +64,7 @@ def main(start_urls = start_urls, keywords = keywords):
             site_dict = {}
 
             page_url = response.url
+            domain_url = urlparse(page_url).netloc
             page_html = requests.get(page_url).content
             page_soup = bs(page_html, 'html.parser')
 
@@ -85,7 +86,7 @@ def main(start_urls = start_urls, keywords = keywords):
 
                 scraped_urls.append(page_url)
 
-                internal_urls = list(compress(page_links, [(start_url in link or "http" not in link) for link in page_links]))
+                internal_urls = list(compress(page_links, [(domain_url in link or "http" not in link) for link in page_links]))
 
                 new_urls = list(set(internal_urls) - set(scraped_urls)) # Extracted URLs from pages - should be on same domain
 
@@ -103,7 +104,7 @@ def main(start_urls = start_urls, keywords = keywords):
                         
             
             # Save scraped data
-            outname = "drr_scrape{}".format(str(datetime.now().date()))
+            outname = "drr_scrape{}.json".format(str(datetime.now().date()))
             with open(os.path.join(data_dir, outname), 'w') as f:
                 json.dump(site_list, f)
                 
