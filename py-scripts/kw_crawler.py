@@ -17,10 +17,10 @@ from itertools import compress
 
 logger = logging.getLogger(__name__)
 
-main_dir = os.path.join()
+main_dir = os.path.join("/home", "ubuntu", "keyword_crawler")
 data_dir = os.path.join(main_dir, "data")
 mat_dir = os.path.join(main_dir, "materials")
-log_dir = os.path.join(main_dir, "logs"
+log_dir = os.path.join(main_dir, "logs")
 
 # Define scraper starting points
 start_urls = []
@@ -54,7 +54,7 @@ def main(start_urls = start_urls, keywords = keywords):
 
         def start_requests(self, start_urls = start_urls):
             for start_url in start_urls:
-                logger.info("Starting scrape for {start_url}...".format(start_url = start_url)
+                logger.info("Starting scrape for {start_url}...".format(start_url = start_url))
                 yield scrapy.Request(url = start_url, callback = self.parse)
 
         #Parsing
@@ -125,6 +125,6 @@ def main(start_urls = start_urls, keywords = keywords):
 
 if __name__ == '__main__':
     FORMAT = '%(asctime)-15s %(message)s'
-    logout = os.path.join(logdir, 'scraper.log')
+    logout = os.path.join(log_dir, 'scraper.log')
     logging.basicConfig(filename=logout, filemode='a', level=logging.INFO, format = FORMAT)
     main()
