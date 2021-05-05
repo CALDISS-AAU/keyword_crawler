@@ -5,7 +5,7 @@ import logging
 import json
 
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup as bs
 import scrapy
 from scrapy.crawler import CrawlerProcess
@@ -46,6 +46,15 @@ with open(os.path.join(mat_dir, kw_filename), 'r', encoding = "utf-8") as f:
 keywords = kw_raw.lower().split("\n\n")
 keywords = keywords[1:len(keywords)]
 
+# Read in already scraped URLs
+scraped_urls_filename = "scraped_urls.txt"
+already_scraped = list()
+if os.path.isfile(os.path.join(mat_dir, scraped_urls_filename)):
+    with open(os.path.join(mat_dir, scraped_urls_filename), 'r', encoding = 'utf-8') as f:
+        for line in f:
+            already_scraped.append(line.strip())
+        f.close()
+
 # Define scraper function
 def main(start_urls = start_urls, keywords = keywords):
     # Create class
@@ -54,18 +63,27 @@ def main(start_urls = start_urls, keywords = keywords):
 
         def start_requests(self, start_urls = start_urls):
             for start_url in start_urls:
-                logger.info("Starting scrape for {start_url}...".format(start_url = start_url))
-                yield scrapy.Request(url = start_url, callback = self.parse)
+                self.start_url = start_url
+                if start_url not in scraped_urls:
+                    logger.info("Starting scrape for {start_url}...".format(start_url = start_url))
+                    yield scrapy.Request(url = start_url, callback = self.parse)
+                else:
+                    continue
 
         #Parsing
         def parse(self, response):
-            print(response.url)
+            logger.info("Scraping {}...".format(response.url))
 
             site_dict = {}
 
             page_url = response.url
-            domain_url = urlparse(page_url).netloc
-            page_html = requests.get(page_url).content
+            domain_url = "https://" + urlparse(page_url).netloc
+            start_domain_url = "https://" + urlparse(self.start_url).netloc
+
+            if domain_url != start_domain_url:
+                return
+
+            page_html = response.body
             page_soup = bs(page_html, 'html.parser')
 
             page_text = page_soup.get_text().lower()
@@ -86,7 +104,7 @@ def main(start_urls = start_urls, keywords = keywords):
 
                 scraped_urls.append(page_url)
 
-                internal_urls = list(compress(page_links, [(domain_url in link or "http" not in link) for link in page_links]))
+                internal_urls = list(compress(page_links, [(domain_url in link or link.startswith('/')) for link in page_links]))
 
                 new_urls = list(set(internal_urls) - set(scraped_urls)) # Extracted URLs from pages - should be on same domain
 
@@ -110,7 +128,7 @@ def main(start_urls = start_urls, keywords = keywords):
                 
     #Initiatlize lists
     site_list = list()
-    scraped_urls = list()
+    scraped_urls = already_scraped
 
     # Set parameters
     start_urls = start_urls # start URLs
